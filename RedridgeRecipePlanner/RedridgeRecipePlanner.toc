@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: Redridge Recipe Planner
+## Notes: Merchant's Favor recipe browser, build profiles and material planning for WoW Forever
+## Author: Morkahja
+## Version: 0.1.0-beta
+## SavedVariables: RRPDB
+
+Catalog.lua
+Core.lua
+UI.lua
