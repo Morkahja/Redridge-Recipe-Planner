@@ -42,9 +42,10 @@ assert(RRP.Calculate().selected==0)
 
 -- Match recipe names, capture only the observed schematic and learned status.
 C_TradeSkillUI={
-    GetAllRecipeIDs=function() return {500} end,
+    GetAllRecipeIDs=function() return {500,501} end,
     GetRecipeInfo=function(id)
-        return {name="Elixir of Lesser Intellect",learned=true}
+        return id==500 and {name="Elixir of Lesser Intellect",learned=true}
+                   or {name="Guard\'s Gloves",learned=false}
     end,
     GetRecipeSchematic=function(id)
         return {
@@ -58,6 +59,8 @@ C_TradeSkillUI={
 }
 RRP.ScanProfession()
 assert(p.known[key] and RRPDB.materials[key].materials, "Scan did not save learned recipe")
+assert(RRPDB.materials["Blacksmithing|Guard's Gloves"] and not p.known["Blacksmithing|Guard's Gloves"],
+    "Unlearned recipes should be cached when the client exposes materials")
 assert(RRPDB.materials[key].outputItemID==102)
 
 -- Known intermediates are expanded only when requested and proven known.
