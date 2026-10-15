@@ -32,6 +32,14 @@ assert(loadfile("RedridgeRecipePlanner/UI.lua"))("RedridgeRecipePlanner",RRP)
 -- Simulates the failing /rrp opening path from the bug report.
 RRP.Toggle()
 assert(RRP.Window:IsShown(),"Planner did not open")
+-- Reproduce a mixed old-Core/new-UI install where the character's
+-- learned-recipe table is missing despite the window being displayed.
+local originalGetProfile=RRP.GetProfile
+local legacy={plan={},roles={Tank=true,Utility=true},profession="All",page=1,showAll=true}
+RRP.GetProfile=function() return legacy end
+RRP.Refresh()
+assert(RRP.Window:IsShown(),"UI crashed when p.known was nil")
+RRP.GetProfile=originalGetProfile
 local profile=assert(RRP.GetProfile())
 assert(type(profile.known)=="table" and RRPDB.known==nil,
     "Test must use only character-specific known recipes")
