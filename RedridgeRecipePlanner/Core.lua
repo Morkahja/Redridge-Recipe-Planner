@@ -53,7 +53,14 @@ function RRP.GetProfile()
         RRPDB.characters[charKey] = {plan = {}, known = {}, roles = defaults, profession = "All", showAll = false, page = 1}
     end
     local p = RRPDB.characters[charKey]
-    p.known = p.known or {}
+    -- SavedVariables can survive addon updates. Migrate older/incomplete
+    -- character profiles without discarding the player's recipe selections.
+    if type(p.plan) ~= "table" then p.plan = {} end
+    if type(p.known) ~= "table" then p.known = {} end
+    if type(p.roles) ~= "table" then p.roles = {Utility = true} end
+    if type(p.profession) ~= "string" then p.profession = "All" end
+    if type(p.page) ~= "number" then p.page = 1 end
+    if p.expandIntermediate == nil then p.expandIntermediate = true end
     return p
 end
 
