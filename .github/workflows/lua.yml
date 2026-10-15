@@ -15,4 +15,6 @@ jobs:
           luac5.1 -p RedridgeRecipePlanner/Core.lua
           luac5.1 -p RedridgeRecipePlanner/UI.lua
       - name: Catalog integrity
-        run: lua5.1 tests/catalog.lua
+        run: |
+          lua5.1 tests/catalog.lua
+          lua5.1 tests/core.lua
