@@ -146,8 +146,85 @@ end)
 local showAll=button(f,"Show All Builds",145,26,473,-591,function()
     RRP.ToggleRole("All")
 end)
-local footer=text(f,"GameFontHighlightSmall",nil,632,-591,265,28)
-footer:SetText("/rrp  |  /rrp scan  |  /rrp vendor")
+local shopBtn=button(f,"Full Shopping List",153,26,629,-591,function()
+    if RRP.ToggleShopping then RRP.ToggleShopping() end
+end)
+local footer=text(f,"GameFontHighlightSmall",nil,788,-593,110,24)
+footer:SetText("/rrp")
+
+-- A separate, paginated shopping list shows *every* material and missing schematic.
+local shop=CreateFrame("Frame","RedridgeShoppingListFrame",UIParent,"BackdropTemplate")
+shop:SetSize(610,582)
+shop:SetPoint("CENTER")
+shop:SetFrameStrata("FULLSCREEN_DIALOG")
+shop:EnableMouse(true)
+shop:SetMovable(true)
+shop:RegisterForDrag("LeftButton")
+shop:SetScript("OnDragStart",function(self) self:StartMoving() end)
+shop:SetScript("OnDragStop",function(self) self:StopMovingOrSizing() end)
+if shop.SetBackdrop then
+    shop:SetBackdrop({
+        bgFile="Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile="Interface/Tooltips/UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,
+        insets={left=4,right=4,top=4,bottom=4},
+    })
+    shop:SetBackdropColor(0.055,0.07,0.1,0.99)
+end
+shop:Hide()
+if UISpecialFrames then table.insert(UISpecialFrames,shop:GetName()) end
+local shopTitle=text(shop,"GameFontNormalLarge",nil,18,-16,510,26)
+shopTitle:SetText("Shopping & Gathering List")
+button(shop,"X",28,24,565,-14,function() shop:Hide() end)
+local shopSummary=text(shop,"GameFontHighlightSmall",nil,18,-45,560,43)
+local shopRows={}
+for i=1,15 do
+    shopRows[i]=text(shop,"GameFontHighlightSmall",nil,20,-90-(i-1)*28,568,27)
+end
+local shopPage=1
+local shopPageLabel=text(shop,"GameFontHighlightSmall",nil,175,-521,270,24)
+button(shop,"< Previous",135,26,20,-514,function()
+    shopPage=math.max(1,shopPage-1)
+    RRP.RefreshShopping()
+end)
+button(shop,"Next >",135,26,456,-514,function()
+    shopPage=shopPage+1
+    RRP.RefreshShopping()
+end)
+local shopFoot=text(shop,"GameFontHighlightSmall",nil,20,-554,560,20)
+shopFoot:SetText("Owned = bags only. Unknown reagents cannot be included in totals.")
+function RRP.RefreshShopping()
+    if not shop:IsShown() then return end
+    local calc=RRP.Calculate()
+    local entries={}
+    for id,amount in pairs(calc.items) do
+        entries[#entries+1]={id=id,amount=amount,missing=math.max(0,amount-bagCount(id))}
+    end
+    table.sort(entries,function(a,b)
+        if a.missing ~= b.missing then return a.missing>b.missing end
+        return itemName(a.id)<itemName(b.id)
+    end)
+    local full={}
+    for _,entry in ipairs(entries) do
+        full[#full+1]=short(itemName(entry.id),37)..
+            "     "..bagCount(entry.id).."/"..entry.amount..
+            (entry.missing>0 and "    NEED "..entry.missing or "    READY")
+    end
+    for _,name in ipairs(calc.unknown) do
+        full[#full+1]="|cffffaa55? "..short(name,68).." - ingredients unknown|r"
+    end
+    if #full==0 then full[1]="No recipes selected. Use + in the planner." end
+    local pages=math.max(1,math.ceil(#full/#shopRows))
+    shopPage=math.max(1,math.min(shopPage,pages))
+    local start=(shopPage-1)*#shopRows+1
+    for i,row in ipairs(shopRows) do row:SetText(full[start+i-1] or "") end
+    shopPageLabel:SetText("Page "..shopPage.."/"..pages.."    |    "..#entries.." materials, "..#calc.unknown.." unknown recipes")
+    shopSummary:SetText(calc.selected.." recipes selected. Purchase cost: "..calc.favor..
+        (calc.unknownFavor and "+ (some unknown)" or "").." Merchant's Favor.\n"..
+        "Missing known reagents: "..calc.missing.." items.")
+end
+function RRP.ToggleShopping()
+    if shop:IsShown() then shop:Hide() else shop:Show(); shopPage=1; RRP.RefreshShopping() end
+end
 
 function RRP.Refresh()
     if not f:IsShown() then return end
@@ -173,7 +250,7 @@ function RRP.Refresh()
         if r then
             local qty=p.plan[r.key] or 0
             local marker=qty>0 and "|cff66ee99*|r " or ""
-            local known=RRPDB.known[r.key] and "|cff66ccff (Known)|r" or ""
+            local known=p.known[r.key] and "|cff66ccff (Known)|r" or ""
             local selected=RRP.selectedKey == r.key and "|cffffff88>|r " or ""
             row.select:SetText(selected..marker..short(r.name,37)..known)
             row.qty:SetText(qty>0 and tostring(qty) or "-")
@@ -239,6 +316,7 @@ function RRP.Refresh()
         lines[2]="Unknown materials are NOT counted as zero."
     end
     materialText:SetText(table.concat(lines,"\n"))
+    RRP.RefreshShopping()
 end
 
 function RRP.Toggle()
