@@ -18,3 +18,4 @@ jobs:
         run: |
           lua5.1 tests/catalog.lua
           lua5.1 tests/core.lua
+          lua5.1 tests/ui.lua
