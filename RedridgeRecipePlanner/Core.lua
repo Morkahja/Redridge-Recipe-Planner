@@ -81,6 +81,11 @@ function RRP.IsRelevant(r)
     local p = RRP.GetProfile()
     if not p then return true end
     if p.showAll then return true end
+    -- Paladin-tagged designs should not appear on a Warrior just because
+    -- they also match Tank or Melee. Players may opt in to Paladin gear.
+    if r.roles and r.roles:find("Paladin", 1, true) and not p.roles.Paladin then
+        return false
+    end
     if p.roles.All or not r.roles then return true end
     for part in r.roles:gmatch("[^,]+") do
         if p.roles[trim(part)] then return true end
@@ -318,6 +323,8 @@ SlashCmdList["REDRIDGERECIPEPLANNER"] = function(msg)
     local cmd = trim(msg):lower()
     if cmd == "scan" then RRP.ScanProfession()
     elseif cmd == "vendor" then RRP.ScanVendor()
+    elseif cmd == "list" then
+        if RRP.ToggleShopping then RRP.ToggleShopping() end
     elseif cmd == "resetview" then
         local p = RRP.GetProfile()
         p.profession, p.page, p.showAll = "All", 1, false
