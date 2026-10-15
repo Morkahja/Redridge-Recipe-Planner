@@ -203,11 +203,13 @@ function RRP.ScanProfession()
                 for _,r in ipairs(matches) do
                     if info.learned then
                         RRP.GetProfile().known[r.key] = true
-                        local sch = inspectSchematic(id)
-                        if sch then
-                            RRPDB.materials[r.key] = sch
-                            cached = cached + 1
-                        end
+                    end
+                    -- Modern profession UI may expose schematics even for recipes
+                    -- not yet learned. Capture only actual API data when it does.
+                    local sch = inspectSchematic(id)
+                    if sch then
+                        RRPDB.materials[r.key] = sch
+                        cached = cached + 1
                     end
                     checked = checked + 1
                 end
