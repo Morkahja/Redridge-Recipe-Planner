@@ -21,6 +21,22 @@ assert(loadfile("RedridgeRecipePlanner/Core.lua"))("RedridgeRecipePlanner",RRP)
 
 local p=assert(RRP.GetProfile())
 p.expandIntermediate=true
+-- Regression for the UI.lua:273 crash reported from an existing install:
+-- a saved character profile may predate the per-character known field.
+local oldPlan=p.plan
+local originalRoles=p.roles
+p.known=nil
+assert(RRP.GetProfile().known and type(RRP.GetProfile().known)=="table",
+    "Missing known table must be migrated before the UI uses it")
+assert(p.plan==oldPlan, "Profile migration must preserve planned recipes")
+-- Simulate a more incomplete old SavedVariables record.
+p.roles=nil
+p.page=nil
+p.profession=nil
+RRP.GetProfile()
+assert(type(p.roles)=="table" and p.profession=="All" and p.page==1,
+    "Incomplete saved profiles must be restored safely")
+p.roles=originalRoles
 assert(p.roles.Tank and p.roles.Melee and not p.roles.Paladin)
 assert(RRP.IsRelevant(RRP.ByKey["Blacksmithing|Guard's Gloves"]))
 assert(not RRP.IsRelevant(RRP.ByKey["Blacksmithing|Protector's Gloves"]),
