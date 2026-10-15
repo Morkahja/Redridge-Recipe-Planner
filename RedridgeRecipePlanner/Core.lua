@@ -50,9 +50,11 @@ function RRP.GetProfile()
             defaults.Caster = true
         end
         defaults.Utility = true
-        RRPDB.characters[charKey] = {plan = {}, roles = defaults, profession = "All", showAll = false, page = 1}
+        RRPDB.characters[charKey] = {plan = {}, known = {}, roles = defaults, profession = "All", showAll = false, page = 1}
     end
-    return RRPDB.characters[charKey]
+    local p = RRPDB.characters[charKey]
+    p.known = p.known or {}
+    return p
 end
 
 function RRP.GetRecipes()
@@ -195,7 +197,7 @@ function RRP.ScanProfession()
             if matches then
                 for _,r in ipairs(matches) do
                     if info.learned then
-                        RRPDB.known[r.key] = true
+                        RRP.GetProfile().known[r.key] = true
                         local sch = inspectSchematic(id)
                         if sch then
                             RRPDB.materials[r.key] = sch
@@ -271,7 +273,7 @@ function RRP.Calculate()
     if not p then return result end
     local craftsByOutput = {}
     for key,d in pairs(RRPDB.materials) do
-        if d.outputItemID and not d.incomplete and #d.materials > 0 and RRPDB.known[key] then
+        if d.outputItemID and not d.incomplete and #d.materials > 0 and p.known[key] then
             craftsByOutput[d.outputItemID] = d
         end
     end
@@ -333,7 +335,6 @@ eventFrame:SetScript("OnEvent",function(_,event,arg)
         RRPDB = RRPDB or {}
         RRPDB.characters = RRPDB.characters or {}
         RRPDB.materials = RRPDB.materials or {}
-        RRPDB.known = RRPDB.known or {}
         RRPDB.discovered = RRPDB.discovered or {}
         RRPDB.scrollItems = RRPDB.scrollItems or {}
         RRPDB.playerTrainer = RRPDB.playerTrainer or {}
@@ -341,10 +342,5 @@ eventFrame:SetScript("OnEvent",function(_,event,arg)
         local p = RRP.GetProfile()
         if p.expandIntermediate == nil then p.expandIntermediate = true end
         say("Ready. Type /rrp to open, /rrp scan with professions open.")
-    elseif event == "TRADE_SKILL_SHOW" or event == "TRADE_SKILL_LIST_UPDATE" then
-        RRP.ScanProfession()
     end
 end)
--- Unavailable events throw in this client, so keep registration optional.
-pcall(eventFrame.RegisterEvent, eventFrame, "TRADE_SKILL_SHOW")
-pcall(eventFrame.RegisterEvent, eventFrame, "TRADE_SKILL_LIST_UPDATE")
