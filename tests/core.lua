@@ -20,6 +20,7 @@ RRPDB={characters={},materials={},known={},discovered={},scrollItems={},playerTr
 assert(loadfile("RedridgeRecipePlanner/Core.lua"))("RedridgeRecipePlanner",RRP)
 
 local p=assert(RRP.GetProfile())
+p.expandIntermediate=true
 assert(p.roles.Tank and p.roles.Melee and not p.roles.Paladin)
 assert(RRP.IsRelevant(RRP.ByKey["Blacksmithing|Guard's Gloves"]))
 assert(not RRP.IsRelevant(RRP.ByKey["Blacksmithing|Protector's Gloves"]),
