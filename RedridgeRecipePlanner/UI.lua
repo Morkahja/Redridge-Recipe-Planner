@@ -270,7 +270,7 @@ function RRP.Refresh()
     if r then
         RRP.selectedKey=r.key
         pickedName:SetText(r.name)
-        local known=RRPDB.known[r.key] and "Learned (observed)" or "Not confirmed learned"
+        local known=p.known[r.key] and "Learned (observed)" or "Not confirmed learned"
         pickedInfo:SetText(
             r.profession .. "  |  " .. known ..
             "\nRequired level: " .. (r.level or "?") ..
