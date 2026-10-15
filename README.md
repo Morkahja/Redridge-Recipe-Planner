@@ -2,9 +2,12 @@
 
 A WoW **Forever (1.60.1)** addon for planning recipes sold for **Merchant's Favor** at the Alliance **Azeroth Commerce Authority** in Redridge Mountains and the Horde **Durotar Supply and Logistics** camp.
 
-**Status:** 0.1.0 beta. Code and initial recipe catalog are published; **in-game testing is still required**.
+**Status:** 0.1.1 beta. Code and initial recipe catalog are published; **in-game testing is still required**.
 
 ## Installation
+
+**Updating from an older version:** replace the entire `RedridgeRecipePlanner` addon folder, not only `UI.lua`. Restart the game fully (or use `/reload` after confirming all Lua files were replaced). Saved character plans are retained by the migration.
+
 
 1. Download this repository from GitHub (**Code → Download ZIP**), or clone it.
 2. Copy **only** the `RedridgeRecipePlanner` folder into your Forever install:
@@ -15,6 +18,11 @@ A WoW **Forever (1.60.1)** addon for planning recipes sold for **Merchant's Favo
 4. Restart WoW, enable **Redridge Recipe Planner** at the AddOns screen, and type **`/rrp`**.
 
 The addon targets interface **16001**, corresponding to the observed Forever 1.60.1 beta. If an update changes the interface, check `/run print(select(4,GetBuildInfo()))` before changing the TOC.
+
+## 0.1.1-beta fix
+
+- Fixed a Lua error on opening the planner when the character's saved `known` recipe table was missing (`UI.lua:273`).
+- Migrates partial character SavedVariables profiles safely and adds UI regression coverage.
 
 ## Features
 
@@ -62,6 +70,7 @@ The GitHub Actions workflow checks syntax and runs catalog invariants and planne
 luac5.1 -p RedridgeRecipePlanner/*.lua
 lua5.1 tests/catalog.lua
 lua5.1 tests/core.lua
+lua5.1 tests/ui.lua
 ```
 
 Do not rename the installed addon folder; its name must match `RedridgeRecipePlanner.toc`.
