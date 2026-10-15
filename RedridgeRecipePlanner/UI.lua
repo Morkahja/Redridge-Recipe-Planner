@@ -230,6 +230,10 @@ function RRP.Refresh()
     if not f:IsShown() then return end
     local p=RRP.GetProfile()
     if not p then return end
+    -- Defensive against old/mixed addon versions and legacy character data.
+    local knownRecipes = type(p.known) == "table" and p.known or {}
+    local plan = type(p.plan) == "table" and p.plan or {}
+    local roles = type(p.roles) == "table" and p.roles or {}
     local list=RRP.VisibleRecipes()
     local pages=math.max(1,math.ceil(#list / #rows))
     p.page=math.max(1,math.min(p.page or 1,pages))
@@ -241,16 +245,16 @@ function RRP.Refresh()
     end
     for i,b in ipairs(roleButtons) do
         local name=RRP.Roles[i]
-        local active = name=="All" and p.showAll or p.roles[name]
+        local active = name=="All" and p.showAll or roles[name]
         b:SetText((active and "[x] " or "[ ] ")..name)
     end
     for i,row in ipairs(rows) do
         local r=list[start+i-1]
         row.recipe=r
         if r then
-            local qty=p.plan[r.key] or 0
+            local qty=plan[r.key] or 0
             local marker=qty>0 and "|cff66ee99*|r " or ""
-            local known=p.known[r.key] and "|cff66ccff (Known)|r" or ""
+            local known=knownRecipes[r.key] and "|cff66ccff (Known)|r" or ""
             local selected=RRP.selectedKey == r.key and "|cffffff88>|r " or ""
             row.select:SetText(selected..marker..short(r.name,37)..known)
             row.qty:SetText(qty>0 and tostring(qty) or "-")
@@ -270,7 +274,7 @@ function RRP.Refresh()
     if r then
         RRP.selectedKey=r.key
         pickedName:SetText(r.name)
-        local known=p.known[r.key] and "Learned (observed)" or "Not confirmed learned"
+        local known=knownRecipes[r.key] and "Learned (observed)" or "Not confirmed learned"
         pickedInfo:SetText(
             r.profession .. "  |  " .. known ..
             "\nRequired level: " .. (r.level or "?") ..
@@ -281,7 +285,7 @@ function RRP.Refresh()
         pickedNote:SetText(
             (r.alternative or "Trainer comparison: no independently verified duplicate.") ..
             "\nCraft reagents: " .. (schem and (schem.incomplete and "partial scan" or "scanned") or "not yet scanned"))
-        selectedQty:SetText("Craft: "..(p.plan[r.key] or 0))
+        selectedQty:SetText("Craft: "..(plan[r.key] or 0))
         compare:SetText(RRP.GetTrainerStatus(r) ..
             "\nMarks are personal observations, not verified trainer data.")
         decrement:Enable(); increment:Enable(); trainer:Enable()
